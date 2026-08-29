@@ -1,0 +1,23 @@
+{
+	"name": "genii-gateway",
+	"private": true,
+	"type": "module",
+	"packageManager": "pnpm@11.24.0",
+	"engines": {
+		"node": "24.x"
+	},
+	"scripts": {
+		"build": "turbo run build",
+		"check": "biome ci . && turbo run typecheck test build",
+		"format": "biome check --write .",
+		"lint": "biome lint .",
+		"test": "turbo run test",
+		"typecheck": "turbo run typecheck"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.5.10",
+		"@types/node": "26.3.0",
+		"turbo": "2.10.12",
+		"typescript": "7.0.2"
+	}
+}

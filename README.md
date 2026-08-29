@@ -58,6 +58,63 @@ cron scheduling, heartbeats, memory, and corporate hierarchy. Plugins can
 depend on one another, so the heartbeat plugin can use the scheduler instead of
 running a separate clock.
 
+## Repository layout
+
+This repository uses a pnpm workspace, with packages stored below `packages`
+and project documentation stored below `docs`. The initial workspace package
+is `packages/gateway`, which provides the private `@usegenii/gateway` package
+until the separate publication work is complete.
+
+Configuration for TypeScript, Biome, pnpm, and Turborepo lives at the
+repository root so each package follows the same development rules. Turborepo
+runs package tasks from that root and keeps its local cache inside the current
+checkout. Future packages related to the Gateway use the
+`@usegenii/gateway-*` naming pattern.
+
+## Development
+
+Development uses Node.js 24 LTS. The root `packageManager` field pins the exact
+pnpm version, which lets Corepack select the repository's package manager
+without requiring contributors to manage a separate global pnpm version.
+Enable Corepack and install the locked dependencies from the repository root:
+
+```sh
+corepack enable
+pnpm install --frozen-lockfile
+```
+
+The root scripts send package work through Turborepo while keeping repository
+wide formatting and linting in Biome. Run these commands from the repository
+root:
+
+| Command | Purpose |
+| --- | --- |
+| `pnpm format` | Runs Biome in write mode to format supported files and apply fixes that Biome classifies as safe. |
+| `pnpm lint` | Checks source code, tests, JSON, and supported repository configuration without changing files. |
+| `pnpm typecheck` | Runs each package's strict TypeScript checks through Turborepo without emitting build output. |
+| `pnpm test` | Runs the test tasks currently defined by workspace packages through Turborepo. |
+| `pnpm build` | Compiles each workspace package through Turborepo and writes its declared build outputs. |
+| `pnpm check` | Validates formatting and lint rules before running type checks, tests, and builds without changing tracked files. |
+
+## Toolchain decisions
+
+Every package uses native ESM and strict TypeScript with NodeNext module
+resolution so development, compiled output, and Node.js use the same module
+rules. The Gateway build writes JavaScript, declarations, and source maps to
+`packages/gateway/dist`, and expected failures use `neverthrow` instead of
+exceptions.
+
+Biome formats and lints the repository with tabs at an indent width of four,
+single quotes for JavaScript and TypeScript strings, double quotes for TSX
+properties, semicolons, and trailing commas wherever the syntax permits them.
+The lint configuration also rejects barrel files, which keeps package entry
+points explicit as the workspace grows.
+
+The pnpm configuration saves exact dependency versions and waits three days
+before accepting a newly published release. It also rejects trust downgrades
+and exotic transitive sources. Dependency build scripts remain disabled unless
+a maintainer explicitly allows the package in `pnpm-workspace.yaml`.
+
 ## Documentation
 
 The [architecture guide](docs/architecture.md) explains how messages move

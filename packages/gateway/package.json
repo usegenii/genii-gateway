@@ -1,0 +1,26 @@
+{
+	"name": "@usegenii/gateway",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"engines": {
+		"node": "24.x"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "tsc --project tsconfig.build.json",
+		"lint": "biome lint src",
+		"typecheck": "tsc --project tsconfig.json"
+	},
+	"dependencies": {
+		"neverthrow": "8.2.0"
+	}
+}
