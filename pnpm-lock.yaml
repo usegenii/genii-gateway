@@ -23,6 +23,9 @@ importers:
 
   packages/gateway:
     dependencies:
+      hookable:
+        specifier: 6.1.1
+        version: 6.1.1
       neverthrow:
         specifier: 8.2.0
         version: 8.2.0
@@ -245,6 +248,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  hookable@6.1.1:
+    resolution: {integrity: sha512-U9LYDy1CwhMCnprUfeAZWZGByVbhd54hwepegYTK7Pi5NvqEj63ifz5z+xukznehT7i6NIZRu89Ay1AZmRsLEQ==}
+
   neverthrow@8.2.0:
     resolution: {integrity: sha512-kOCT/1MCPAxY5iUV3wytNFUMUolzuwd/VF/1KCx7kf6CutrOsTie+84zTGTpgQycjvfLdBBdvBvFLqFD2c0wkQ==}
     engines: {node: '>=18'}
@@ -382,6 +388,8 @@ snapshots:
 
   '@typescript/typescript-win32-x64@7.0.2':
     optional: true
+
+  hookable@6.1.1: {}
 
   neverthrow@8.2.0:
     optionalDependencies:

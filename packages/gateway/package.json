@@ -18,9 +18,11 @@
 	"scripts": {
 		"build": "tsc --project tsconfig.build.json",
 		"lint": "biome lint src",
+		"test": "node --test test/*.test.ts",
 		"typecheck": "tsc --project tsconfig.json"
 	},
 	"dependencies": {
+		"hookable": "6.1.1",
 		"neverthrow": "8.2.0"
 	}
 }
