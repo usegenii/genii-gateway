@@ -21,6 +21,7 @@ test('delivers typed payloads to asynchronous handlers in registration order', a
 		await Promise.resolve();
 		calls.push(`first:${text}`);
 	});
+
 	events.on('genii:message', ({ text }) => {
 		calls.push(`second:${text}`);
 	});
@@ -62,9 +63,11 @@ test('removes every subscription owned by one plugin', async () => {
 	firstOwner.on('genii:message', () => {
 		calls.push('first-message');
 	});
+
 	firstOwner.on('plugin:@usegenii/example:ready', () => {
 		calls.push('first-ready');
 	});
+
 	secondOwner.on('genii:message', () => {
 		calls.push('second-message');
 	});
@@ -104,6 +107,7 @@ test('stops after a thrown or rejected handler and preserves the error', async (
 				throw failure;
 			},
 		],
+
 		[
 			'rejection',
 			async () => {
@@ -118,6 +122,7 @@ test('stops after a thrown or rejected handler and preserves the error', async (
 			let laterHandlerRan = false;
 
 			events.on('genii:message', failingHandler);
+
 			events.on('genii:message', () => {
 				laterHandlerRan = true;
 			});

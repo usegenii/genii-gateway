@@ -10,6 +10,7 @@ type EventName = keyof GatewayEventMap & string;
 type GatewayHooks = {
 	[Name in EventName]: EventHandler<GatewayEventMap[Name]>;
 };
+
 interface TypedHooks {
 	hook<Name extends EventName>(
 		name: Name,
@@ -62,10 +63,17 @@ export function createEventBus(): GatewayEventBus {
 					subscriptions.set(pluginId, owned);
 
 					const unsubscribe = () => {
-						if (!owned.delete(unsubscribe)) return;
+						if (!owned.delete(unsubscribe)) {
+							return;
+						}
+
 						removeHook();
-						if (owned.size === 0) subscriptions.delete(pluginId);
+
+						if (owned.size === 0) {
+							subscriptions.delete(pluginId);
+						}
 					};
+
 					owned.add(unsubscribe);
 					return unsubscribe;
 				},
