@@ -10,6 +10,10 @@
 		".": {
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
+		},
+		"./event-bus": {
+			"types": "./dist/event-bus.d.ts",
+			"import": "./dist/event-bus.js"
 		}
 	},
 	"files": [
