@@ -69,6 +69,7 @@ test('rejects invalid plugin IDs', () => {
 		kind: 'invalid_plugin_id',
 		pluginId: 'INVALID',
 	});
+
 	assert.deepEqual(failureFor([plugin('consumer', ['bad:id'])]), {
 		kind: 'invalid_plugin_id',
 		pluginId: 'bad:id',

@@ -31,9 +31,11 @@ export function resolvePluginOrder(
 		if (!pluginIdPattern.test(plugin.id)) {
 			return err({ kind: 'invalid_plugin_id', pluginId: plugin.id });
 		}
+
 		if (pluginsById.has(plugin.id)) {
 			return err({ kind: 'duplicate_plugin_id', pluginId: plugin.id });
 		}
+
 		pluginsById.set(plugin.id, plugin);
 	}
 
@@ -45,6 +47,7 @@ export function resolvePluginOrder(
 					pluginId: dependencyId,
 				});
 			}
+
 			if (!pluginsById.has(dependencyId)) {
 				return err({
 					kind: 'missing_plugin_dependency',
@@ -105,9 +108,11 @@ function findCycleMembers(
 			if (!unresolved.has(dependencyId)) {
 				continue;
 			}
+
 			if (dependencyId === start) {
 				return true;
 			}
+
 			if (visited.has(dependencyId)) {
 				continue;
 			}
