@@ -5,7 +5,7 @@ import {
 	type PluginDescriptor,
 	type PluginId,
 	resolvePluginOrder,
-} from '../src/index.ts';
+} from '../src/plugin-dependencies.ts';
 
 const plugin = (
 	id: PluginId,

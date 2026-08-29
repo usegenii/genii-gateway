@@ -10,6 +10,10 @@
 		".": {
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
+		},
+		"./plugin-dependencies": {
+			"types": "./dist/plugin-dependencies.d.ts",
+			"import": "./dist/plugin-dependencies.js"
 		}
 	},
 	"files": [
