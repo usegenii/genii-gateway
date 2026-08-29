@@ -26,16 +26,19 @@ The Gateway core manages ACP sessions, channel operations, context, tools,
 plugin loading, and profile data. Plugins run inside the Gateway process and
 use the core whenever they need to work with a session or channel.
 
+The [plugin runtime contract](plugin-runtime.md) defines the public plugin API,
+event behavior, dependency ordering, lifecycle cleanup, and failure handling.
+
 ACP harnesses run models and manage the agent loop, including model providers,
 planning, transcripts, history selection, compaction, and the model's context
 window. The Gateway reaches that work through ACP.
 
 ## How messages move through the Gateway
 
-The in-process event bus is where work begins inside the Gateway. It receives
-channel events, scheduled triggers, ACP activity, tool requests, and plugin
-lifecycle events, then calls the core and plugin handlers registered for each
-event. Plugins can also define and handle their own namespaced events.
+The in-process event bus distributes awaited notifications inside the Gateway.
+It receives channel events, scheduled triggers, ACP activity, and
+plugin-defined events, then calls the core and plugin handlers registered for
+each event. Handlers call the router and other core services directly.
 
 A channel interaction moves through these steps:
 
