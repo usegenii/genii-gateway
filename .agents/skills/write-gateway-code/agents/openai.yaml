@@ -1,0 +1,4 @@
+interface:
+  display_name: "Write Gateway code"
+  short_description: "Apply Genii Gateway code conventions"
+  default_prompt: "Use $write-gateway-code to implement this change with the repository conventions."
