@@ -211,6 +211,8 @@ Give every implementation thread this contract:
   repeat review when needed until clean.
 - Fetch the latest default branch again and reconcile safely.
 - Commit, push, and open a pull request that closes the issue.
+- Title the pull request using Conventional Commits syntax:
+  `<type>[optional scope][!]: <description>`.
 - Start the pull request's Summary section with two or three plain-English
   sentences explaining what the change is for and how the implementation works
   to a reader who does not know the repository internals. Keep the bulleted
