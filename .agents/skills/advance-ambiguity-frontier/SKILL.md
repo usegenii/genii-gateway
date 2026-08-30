@@ -190,6 +190,10 @@ Give every implementation thread this contract:
   repeat review when needed until clean.
 - Fetch the latest default branch again and reconcile safely.
 - Commit, push, and open a pull request that closes the issue.
+- Start the pull request's Summary section with two or three plain-English
+  sentences explaining what the change is for and how the implementation works
+  to a reader who does not know the repository internals. Keep the bulleted
+  technical summary beneath that description.
 - Do not merge.
 - Verify the live pull request head and base, mergeability, and terminal hosted
   CI success before reporting completion.
