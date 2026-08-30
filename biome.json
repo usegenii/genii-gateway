@@ -16,6 +16,9 @@
 			"preset": "recommended",
 			"performance": {
 				"noBarrelFile": "error"
+			},
+			"style": {
+				"useBlockStatements": "error"
 			}
 		}
 	},
