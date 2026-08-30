@@ -26,6 +26,10 @@ ready issue in an isolated Codex thread.
 - Put tests for new behavior in its implementation issue. Do not create a
   "missing test" issue for behavior that does not exist.
 - Do not duplicate an open issue, pull request, branch, or active Codex thread.
+- Inspect Codex threads and worktrees on the current machine only. Never query
+  connected or remote hosts, and never treat their threads as claims. If a
+  thread tool cannot scope reads to the current machine, use local Codex
+  session metadata and Git worktrees instead.
 - Create GitHub issues or Codex threads only when the user authorized those
   mutations. A request to audit or report does not authorize them.
 - Never merge implementation pull requests unless the user separately asks.
@@ -40,8 +44,9 @@ Keep the parent preflight small:
 1. Fetch the default branch and record its commit SHA.
 2. Confirm the repository identity, default branch, and whether the user
    authorized issue and thread mutations.
-3. Enumerate the available subagent slots and Codex hosts. Do not read every
-   document, source file, issue, pull request, or thread before delegation.
+3. Enumerate the available subagent slots and current-machine Codex state. Do
+   not read every document, source file, issue, pull request, or thread before
+   delegation.
 
 Delegate those expensive reads immediately. Require every subagent to recheck
 the small piece of live state it will mutate immediately before doing so.
@@ -78,7 +83,8 @@ issues or edit the repository.
 
 At the same time, assign a ready-work coordinator to read all open issues and
 their bodies, native dependencies, open pull requests and changed files,
-branches, and existing Codex threads. It classifies every open issue as ready,
+branches, and existing current-machine Codex threads. It classifies every open
+issue as ready,
 blocked, claimed, closed by live work, or ambiguous. An issue is ready only
 when every native blocker is closed, its scope is concrete, and no pull request
 or Codex thread claims it. The coordinator also returns duplicate candidates,
@@ -90,18 +96,19 @@ subagent. Run launch subagents concurrently with any frontier subagents still
 working, in waves when needed. Each launch subagent:
 
 1. Rechecks the issue state, open native blockers, claiming remote branches,
-   open pull requests, and existing Codex threads.
+   open pull requests, and existing current-machine Codex threads.
 2. Stops without mutation if the issue became blocked, closed, ambiguous, or
    claimed.
 3. Lists Codex projects, creates one new worktree thread for the issue, and
    embeds the stable issue key and URL in its title or prompt.
 4. Returns the issue URL, thread ID, host ID, worktree path, and launch status.
 
-For each launch assignment, keep app calls individually observable: call
-`list_projects` alone, then search once using the stable issue key. Do not infer
+For each launch assignment, keep app calls individually observable: select the
+current machine's project, then search local Codex metadata once using the
+stable issue key. Do not infer
 that thread management is unavailable from one hung compound call. Exclude the
 current thread and worktree from the search. Broaden to the full issue URL,
-title, and recent threads across hosts only after a timeout, unknown or
+title, and recent current-machine threads only after a timeout, unknown or
 incomplete result, or suspected duplicate. Use bounded timeouts; after a
 timeout or unknown create result, reconcile recent threads and worktrees before
 at most one retry. Treat the assignment as claimed until that reconciliation
@@ -186,8 +193,8 @@ Add remaining ready issues to the assignment ledger, then assign one launch
 subagent per issue and run them concurrently. Use the same duplicate checks and
 readback as the initial launch lane.
 
-If a thread-creation call times out, search recent threads across hosts and Git
-worktrees for the exact stable issue key and URL before retrying. Treat an
+If a thread-creation call times out, search recent current-machine threads and
+Git worktrees for the exact stable issue key and URL before retrying. Treat an
 unknown outcome as claimed until live reconciliation disproves it. Retry at
 most once after confirming that no matching thread or worktree exists; then
 report an infrastructure blocker. If waiting for a launch subagent times out,
@@ -200,8 +207,8 @@ Give every implementation thread this contract:
 
 - Start in a new worktree from the latest default branch.
 - Fetch `origin/main` and inspect the live issue, native dependencies, claiming
-  remote branches, open pull requests, existing Codex threads, current
-  contracts, and relevant source before editing.
+  remote branches, open pull requests, existing current-machine Codex threads,
+  current contracts, and relevant source before editing.
 - Exclude the current thread and worktree from claim checks. Stop if the issue
   is closed, blocked, ambiguous, or claimed by another branch, pull request, or
   Codex thread.
