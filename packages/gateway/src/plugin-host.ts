@@ -73,8 +73,8 @@ export function createPluginHost(
 			return startPromise;
 		}
 
-		startPromise = ResultAsync.fromPromise(
-			(async () => {
+		startPromise = new ResultAsync(
+			(async (): Promise<Result<void, PluginHostFailure>> => {
 				for (const plugin of orderedPlugins) {
 					const owned = createPluginContext(
 						plugin.id,
@@ -82,28 +82,57 @@ export function createPluginHost(
 						serviceRegistry,
 					);
 					contexts.set(plugin.id, owned);
-					const result = await plugin.start(owned.context);
-					if (result.isErr()) {
-						await owned.dispose();
+					let result: Result<void, PluginLifecycleFailure>;
+					try {
+						result = await plugin.start(owned.context);
+					} catch (error) {
+						const programmerErrors = [error];
 						const cleanupFailures: PluginOperationFailure[] = [];
-						await stopPlugins(started, cleanupFailures);
-						throw new ExpectedHostFailure({
+						await disposePlugin(plugin.id, owned, programmerErrors);
+						await stopPlugins(
+							started,
+							programmerErrors,
+							cleanupFailures,
+						);
+						throw new AggregateError(
+							[...programmerErrors, ...cleanupFailures],
+							'Plugin startup failed',
+						);
+					}
+					if (result.isErr()) {
+						const programmerErrors: unknown[] = [];
+						const primary: PluginOperationFailure = {
+							pluginId: plugin.id,
+							phase: 'start',
+							failure: result.error,
+						};
+						const cleanupFailures: PluginOperationFailure[] = [];
+						await disposePlugin(plugin.id, owned, programmerErrors);
+						await stopPlugins(
+							started,
+							programmerErrors,
+							cleanupFailures,
+						);
+						if (programmerErrors.length) {
+							throw new AggregateError(
+								[
+									...programmerErrors,
+									primary,
+									...cleanupFailures,
+								],
+								'Plugin startup failed',
+							);
+						}
+						return err({
 							kind: 'start_failed',
-							primary: {
-								pluginId: plugin.id,
-								phase: 'start',
-								failure: result.error,
-							},
+							primary,
 							cleanupFailures,
 						});
 					}
 					started.push(plugin);
 				}
+				return ok(undefined);
 			})(),
-			(error) =>
-				(error instanceof ExpectedHostFailure
-					? error.failure
-					: error) as PluginHostFailure,
 		);
 		return startPromise;
 	};
@@ -113,27 +142,32 @@ export function createPluginHost(
 			return stopPromise;
 		}
 
-		stopPromise = ResultAsync.fromPromise(
-			(async () => {
+		stopPromise = new ResultAsync(
+			(async (): Promise<Result<void, PluginHostFailure>> => {
+				const programmerErrors: unknown[] = [];
 				const failures: PluginOperationFailure[] = [];
-				await stopPlugins(started, failures);
+				await stopPlugins(started, programmerErrors, failures);
+				if (programmerErrors.length) {
+					throw new AggregateError(
+						[...programmerErrors, ...failures],
+						'Plugin shutdown failed',
+					);
+				}
 				if (failures.length) {
-					throw new ExpectedHostFailure({
+					return err({
 						kind: 'stop_failed',
 						failures,
 					});
 				}
+				return ok(undefined);
 			})(),
-			(error) =>
-				(error instanceof ExpectedHostFailure
-					? error.failure
-					: error) as PluginHostFailure,
 		);
 		return stopPromise;
 	};
 
 	async function stopPlugins(
 		list: readonly Plugin[],
+		programmerErrors: unknown[],
 		failures: PluginOperationFailure[],
 	) {
 		for (const plugin of [...list].reverse()) {
@@ -143,30 +177,45 @@ export function createPluginHost(
 			}
 
 			if (plugin.stop) {
-				const result = await plugin.stop(owned.context);
-				if (result.isErr()) {
-					failures.push({
-						pluginId: plugin.id,
-						phase: 'stop',
-						failure: result.error,
-					});
+				try {
+					const result = await plugin.stop(owned.context);
+					if (result.isErr()) {
+						failures.push({
+							pluginId: plugin.id,
+							phase: 'stop',
+							failure: result.error,
+						});
+					}
+				} catch (error) {
+					programmerErrors.push(error);
 				}
 			}
-			await owned.dispose();
+			await disposePlugin(plugin.id, owned, programmerErrors);
 		}
-		for (const plugin of list) {
-			contexts.delete(plugin.id);
+	}
+
+	async function disposePlugin(
+		pluginId: PluginId,
+		owned: OwnedPluginContext,
+		programmerErrors: unknown[],
+	) {
+		try {
+			await owned.dispose();
+		} catch (error) {
+			appendProgrammerErrors(error, programmerErrors);
+		} finally {
+			contexts.delete(pluginId);
 		}
 	}
 
 	return ok({ start, stop });
 }
 
-class ExpectedHostFailure extends Error {
-	readonly failure: PluginHostFailure;
-
-	constructor(failure: PluginHostFailure) {
-		super(failure.kind);
-		this.failure = failure;
+function appendProgrammerErrors(error: unknown, errors: unknown[]) {
+	if (error instanceof SuppressedError) {
+		appendProgrammerErrors(error.suppressed, errors);
+		appendProgrammerErrors(error.error, errors);
+	} else {
+		errors.push(error);
 	}
 }
