@@ -27,7 +27,9 @@ test('starts dependencies first and stops in reverse order with the same context
 	}));
 	const host = hostFor(plugins);
 	assert.equal(host.isOk(), true);
-	if (host.isErr()) return;
+	if (host.isErr()) {
+		return;
+	}
 	assert.equal((await host.value.start()).isOk(), true);
 	assert.equal((await host.value.stop()).isOk(), true);
 	assert.deepEqual(calls, [
@@ -76,10 +78,14 @@ test('rolls back a failed start and reports expected stop failures', async () =>
 	];
 	const host = hostFor(plugins);
 	assert.equal(host.isOk(), true);
-	if (host.isErr()) return;
+	if (host.isErr()) {
+		return;
+	}
 	const result = await host.value.start();
 	assert.equal(result.isErr(), true);
-	if (result.isOk()) return;
+	if (result.isOk()) {
+		return;
+	}
 	assert.deepEqual(result.error, {
 		kind: 'start_failed',
 		primary: {

@@ -50,11 +50,16 @@ export function createPluginHost(
 	serviceRegistry: GatewayServiceRegistry,
 ): Result<PluginHost, PluginDependencyFailure> {
 	const ordered = resolvePluginOrder(plugins);
-	if (ordered.isErr()) return err(ordered.error);
+	if (ordered.isErr()) {
+		return err(ordered.error);
+	}
 	const pluginsById = new Map(plugins.map((plugin) => [plugin.id, plugin]));
 	const orderedPlugins = ordered.value.map((plugin) => {
 		const resolved = pluginsById.get(plugin.id);
-		if (!resolved) throw new Error(`Missing plugin: ${plugin.id}`);
+		if (!resolved) {
+			throw new Error(`Missing plugin: ${plugin.id}`);
+		}
+
 		return resolved;
 	});
 
@@ -64,7 +69,10 @@ export function createPluginHost(
 	let stopPromise: ResultAsync<void, PluginHostFailure> | undefined;
 
 	const start = () => {
-		if (startPromise) return startPromise;
+		if (startPromise) {
+			return startPromise;
+		}
+
 		startPromise = ResultAsync.fromPromise(
 			(async () => {
 				for (const plugin of orderedPlugins) {
@@ -101,16 +109,20 @@ export function createPluginHost(
 	};
 
 	const stop = () => {
-		if (stopPromise) return stopPromise;
+		if (stopPromise) {
+			return stopPromise;
+		}
+
 		stopPromise = ResultAsync.fromPromise(
 			(async () => {
 				const failures: PluginOperationFailure[] = [];
 				await stopPlugins(started, failures);
-				if (failures.length)
+				if (failures.length) {
 					throw new ExpectedHostFailure({
 						kind: 'stop_failed',
 						failures,
 					});
+				}
 			})(),
 			(error) =>
 				(error instanceof ExpectedHostFailure
@@ -126,19 +138,25 @@ export function createPluginHost(
 	) {
 		for (const plugin of [...list].reverse()) {
 			const owned = contexts.get(plugin.id);
-			if (!owned) continue;
+			if (!owned) {
+				continue;
+			}
+
 			if (plugin.stop) {
 				const result = await plugin.stop(owned.context);
-				if (result.isErr())
+				if (result.isErr()) {
 					failures.push({
 						pluginId: plugin.id,
 						phase: 'stop',
 						failure: result.error,
 					});
+				}
 			}
 			await owned.dispose();
 		}
-		for (const plugin of list) contexts.delete(plugin.id);
+		for (const plugin of list) {
+			contexts.delete(plugin.id);
+		}
 	}
 
 	return ok({ start, stop });
