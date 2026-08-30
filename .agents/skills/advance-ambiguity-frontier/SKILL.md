@@ -29,6 +29,9 @@ ready issue in an isolated Codex thread.
 - Create GitHub issues or Codex threads only when the user authorized those
   mutations. A request to audit or report does not authorize them.
 - Never merge implementation pull requests unless the user separately asks.
+- Verification resolves uncertainty or protects a state transition; it is not
+  ceremony. Trust explicit successful tool results and reconcile only uncertain
+  outcomes.
 
 ## Bootstrap without serializing discovery
 
@@ -90,10 +93,20 @@ working, in waves when needed. Each launch subagent:
    open pull requests, and existing Codex threads.
 2. Stops without mutation if the issue became blocked, closed, ambiguous, or
    claimed.
-3. Lists Codex projects, creates one new worktree thread for the issue, embeds
-   the stable issue key and URL in its title or prompt, and reads it back to
-   confirm it is active.
+3. Lists Codex projects, creates one new worktree thread for the issue, and
+   embeds the stable issue key and URL in its title or prompt.
 4. Returns the issue URL, thread ID, host ID, worktree path, and launch status.
+
+For each launch assignment, keep app calls individually observable: call
+`list_projects` alone, then search once using the stable issue key. Do not infer
+that thread management is unavailable from one hung compound call. Exclude the
+current thread and worktree from the search. Broaden to the full issue URL,
+title, and recent threads across hosts only after a timeout, unknown or
+incomplete result, or suspected duplicate. Use bounded timeouts; after a
+timeout or unknown create result, reconcile recent threads and worktrees before
+at most one retry. Treat the assignment as claimed until that reconciliation
+rules out a partial create. An explicit successful create result containing
+`threadId` and `hostId` is terminal evidence; do not require a readback.
 
 The launch subagent only creates and verifies the Codex thread. It does not
 implement the issue in its own checkout.
@@ -107,8 +120,16 @@ each launch assignment as `created`, `already_claimed`, `not_ready`, or
 Before creating issues, cross a mutation barrier:
 
 1. Fetch the default branch again and compare its SHA with the bootstrap SHA.
+   If a linked worktree cannot update shared Git metadata such as `FETCH_HEAD`,
+   first try `git fetch --no-write-fetch-head origin main` to obtain the commit
+   objects, then verify the remote SHA with read-only `git ls-remote origin`.
+   Use the SHA from `ls-remote` for comparison; if the objects cannot be
+   fetched, or if the intervening diff cannot be resolved or inspected, pause
+   mutation and candidate evaluation and report an infrastructure blocker until
+   the diff can be inspected.
 2. Refresh open issues, native dependencies, pull requests, branches, and
-   Codex threads, including threads created by the initial launch lane.
+   Codex threads only as needed to answer an unresolved claim, dependency, or
+   mutation question, including threads created by the initial launch lane.
 3. If the SHA changed, inspect the intervening diff and revalidate every
    affected candidate. Send changed questions back to a frontier subagent when
    needed.
@@ -158,8 +179,8 @@ depends on whether any recorded blocker is still open.
 ## Launch newly ready work in parallel
 
 Refresh issues, native dependencies, pull requests, and Codex threads after
-creating the issue tree. Compute the ready set again and subtract every issue
-already launched by the initial ready-work lane.
+creating the issue tree when needed to compute the ready set and subtract every
+issue already launched by the initial ready-work lane.
 
 Add remaining ready issues to the assignment ledger, then assign one launch
 subagent per issue and run them concurrently. Use the same duplicate checks and
@@ -208,7 +229,8 @@ Before reporting:
 1. Wait until every launch ledger entry is terminal: `created`,
    `already_claimed`, `not_ready`, or `failed`.
 2. Refresh the default-branch SHA, open issues, native dependency graph, open
-   pull requests, and Codex threads once more.
+   pull requests, and Codex threads once more only when final state is still
+   unresolved.
 3. Confirm every created issue body and every dependency edge by readback.
 4. Confirm each ready issue has exactly one active implementation thread or a
    documented reason it was not launched.
