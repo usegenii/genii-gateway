@@ -1,0 +1,4 @@
+interface:
+  display_name: "Advance Ambiguity Frontier"
+  short_description: "Find ready issues and launch parallel Codex work"
+  default_prompt: "Use $advance-ambiguity-frontier to refresh the repo, create ready issues, and launch parallel Codex implementation threads."
