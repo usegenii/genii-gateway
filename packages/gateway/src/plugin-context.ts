@@ -1,18 +1,6 @@
-import type { GatewayEventBus, PluginEvents, PluginId } from './event-bus.ts';
-import type {
-	GatewayServiceRegistry,
-	PluginServices,
-	ServiceToken,
-} from './plugin-services.ts';
-
-export type Cleanup = () => void | Promise<void>;
-
-export interface PluginContext {
-	readonly pluginId: PluginId;
-	readonly events: PluginEvents;
-	readonly services: PluginServices;
-	defer(cleanup: Cleanup): void;
-}
+import type { GatewayEventBus } from './event-bus.ts';
+import type { PluginContext, PluginId, ServiceToken } from './index.ts';
+import type { GatewayServiceRegistry } from './plugin-services.ts';
 
 export interface OwnedPluginContext {
 	readonly context: PluginContext;

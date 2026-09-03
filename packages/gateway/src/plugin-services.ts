@@ -1,17 +1,8 @@
-declare const serviceType: unique symbol;
-
-export type ServiceToken<T> = symbol & {
-	readonly [serviceType]: (value: T) => T;
-};
-
-export interface PluginServices {
-	get<T>(token: ServiceToken<T>): T;
-	provide<T>(token: ServiceToken<T>, value: T): void;
-}
+import type { PluginId, PluginServices, ServiceToken } from './index.ts';
 
 export interface GatewayServiceRegistry {
-	servicesFor(pluginId: string): PluginServices;
-	removeOwner(pluginId: string): void;
+	servicesFor(pluginId: PluginId): PluginServices;
+	removeOwner(pluginId: PluginId): void;
 }
 
 interface Owner {
@@ -23,14 +14,10 @@ interface Registration {
 	readonly value: unknown;
 }
 
-export function serviceToken<T>(description: string): ServiceToken<T> {
-	return Symbol(description) as ServiceToken<T>;
-}
-
 export function createServiceRegistry(): GatewayServiceRegistry {
 	const registrations = new Map<symbol, Registration>();
 	const owners = new Map<
-		string,
+		PluginId,
 		{ readonly owner: Owner; readonly services: PluginServices }
 	>();
 

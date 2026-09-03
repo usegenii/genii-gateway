@@ -1,11 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import {
-	createServiceRegistry,
-	type ServiceToken,
-	serviceToken,
-} from '../src/plugin-services.ts';
+import { type ServiceToken, serviceToken } from '../src/index.ts';
+import { createServiceRegistry } from '../src/plugin-services.ts';
 
 test('provides and gets typed service values', () => {
 	const services = createServiceRegistry().servicesFor('provider');
