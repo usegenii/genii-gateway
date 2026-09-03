@@ -26,6 +26,11 @@ ready issue in an isolated Codex thread.
 - Put tests for new behavior in its implementation issue. Do not create a
   "missing test" issue for behavior that does not exist.
 - Do not duplicate an open issue, pull request, branch, or active Codex thread.
+- Treat the callable tool schemas in the current session as authoritative. Do
+  not assume a `codex_app` namespace or require a project-list operation.
+  Thread launch requires an exposed operation that can create a durable thread
+  in an isolated worktree; a same-directory task or subagent is not a
+  substitute.
 - Inspect Codex threads and worktrees on the current machine only. Never query
   connected or remote hosts, and never treat their threads as claims. If a
   thread tool cannot scope reads to the current machine, use local Codex
@@ -99,21 +104,34 @@ working, in waves when needed. Each launch subagent:
    open pull requests, and existing current-machine Codex threads.
 2. Stops without mutation if the issue became blocked, closed, ambiguous, or
    claimed.
-3. Lists Codex projects, creates one new worktree thread for the issue, and
-   embeds the stable issue key and URL in its title or prompt.
-4. Returns the issue URL, thread ID, host ID, worktree path, and launch status.
+3. Inspects the exposed task/thread creation schema, creates one new worktree
+   thread for the issue, and embeds the stable issue key and URL in its title
+   or prompt.
+4. Returns the issue URL, launch status, task or thread ID, worktree path or
+   directive, and host ID when the operation provides one.
 
-For each launch assignment, keep app calls individually observable: select the
-current machine's project, then search local Codex metadata once using the
-stable issue key. Do not infer
+Before assigning launch subagents, confirm that an exposed creation operation
+can create an inspectable thread in an isolated worktree from the requested
+default-branch commit. An operation that only inherits the caller's working
+directory does not meet this contract. If no operation does, stop the launch
+lane and report the exact missing capability or namespace. Do not call retired
+dynamic tools or use shell-level app-server RPC as a substitute.
+
+For each launch assignment, keep task calls individually observable. Do not
+list projects unless the creation schema requires a project identifier. When it
+does, call the project-list operation separately and select the current
+machine's local project. Then search local Codex metadata once using the stable
+issue key. Do not infer
 that thread management is unavailable from one hung compound call. Exclude the
 current thread and worktree from the search. Broaden to the full issue URL,
 title, and recent current-machine threads only after a timeout, unknown or
 incomplete result, or suspected duplicate. Use bounded timeouts; after a
 timeout or unknown create result, reconcile recent threads and worktrees before
 at most one retry. Treat the assignment as claimed until that reconciliation
-rules out a partial create. An explicit successful create result containing
-`threadId` and `hostId` is terminal evidence; do not require a readback.
+rules out a partial create. An explicit successful create result containing the
+operation's documented task or thread identifier and worktree identity is
+terminal evidence; record a host ID only when returned and do not require a
+readback.
 
 The launch subagent only creates and verifies the Codex thread. It does not
 implement the issue in its own checkout.
@@ -191,7 +209,7 @@ issue already launched by the initial ready-work lane.
 
 Add remaining ready issues to the assignment ledger, then assign one launch
 subagent per issue and run them concurrently. Use the same duplicate checks and
-readback as the initial launch lane.
+verification rules as the initial launch lane.
 
 If a thread-creation call times out, search recent current-machine threads and
 Git worktrees for the exact stable issue key and URL before retrying. Treat an
@@ -246,8 +264,8 @@ Before reporting:
 5. Report whether the ambiguity horizon moved, which issues were created, the
    verified dependency tree, threads launched, ready issues excluded, and any
    infrastructure blocker.
-6. Include the app's created-thread directives for every successfully created
-   thread when the thread tool requires them.
+6. Include the creation operation's directives for every successfully created
+   thread when the task or thread tool requires them.
 
 Parallelism is part of completion. If only one subagent slot is available,
 state that constraint and use waves. Do not describe sequential work as
