@@ -53,6 +53,7 @@ export function createPluginHost(
 	if (ordered.isErr()) {
 		return err(ordered.error);
 	}
+
 	const pluginsById = new Map(plugins.map((plugin) => [plugin.id, plugin]));
 	const orderedPlugins = ordered.value.map((plugin) => {
 		const resolved = pluginsById.get(plugin.id);
@@ -82,23 +83,27 @@ export function createPluginHost(
 						serviceRegistry,
 					);
 					contexts.set(plugin.id, owned);
+
 					let result: Result<void, PluginLifecycleFailure>;
 					try {
 						result = await plugin.start(owned.context);
 					} catch (error) {
 						const programmerErrors = [error];
 						const cleanupFailures: PluginOperationFailure[] = [];
+
 						await disposePlugin(plugin.id, owned, programmerErrors);
 						await stopPlugins(
 							started,
 							programmerErrors,
 							cleanupFailures,
 						);
+
 						throw new AggregateError(
 							[...programmerErrors, ...cleanupFailures],
 							'Plugin startup failed',
 						);
 					}
+
 					if (result.isErr()) {
 						const programmerErrors: unknown[] = [];
 						const primary: PluginOperationFailure = {
@@ -107,12 +112,14 @@ export function createPluginHost(
 							failure: result.error,
 						};
 						const cleanupFailures: PluginOperationFailure[] = [];
+
 						await disposePlugin(plugin.id, owned, programmerErrors);
 						await stopPlugins(
 							started,
 							programmerErrors,
 							cleanupFailures,
 						);
+
 						if (programmerErrors.length) {
 							throw new AggregateError(
 								[
@@ -123,14 +130,17 @@ export function createPluginHost(
 								'Plugin startup failed',
 							);
 						}
+
 						return err({
 							kind: 'start_failed',
 							primary,
 							cleanupFailures,
 						});
 					}
+
 					started.push(plugin);
 				}
+
 				return ok(undefined);
 			})(),
 		);
@@ -146,19 +156,23 @@ export function createPluginHost(
 			(async (): Promise<Result<void, PluginHostFailure>> => {
 				const programmerErrors: unknown[] = [];
 				const failures: PluginOperationFailure[] = [];
+
 				await stopPlugins(started, programmerErrors, failures);
+
 				if (programmerErrors.length) {
 					throw new AggregateError(
 						[...programmerErrors, ...failures],
 						'Plugin shutdown failed',
 					);
 				}
+
 				if (failures.length) {
 					return err({
 						kind: 'stop_failed',
 						failures,
 					});
 				}
+
 				return ok(undefined);
 			})(),
 		);
@@ -190,6 +204,7 @@ export function createPluginHost(
 					programmerErrors.push(error);
 				}
 			}
+
 			await disposePlugin(plugin.id, owned, programmerErrors);
 		}
 	}

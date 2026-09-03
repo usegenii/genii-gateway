@@ -15,6 +15,7 @@ const validHostFor = (plugins: readonly Plugin[]) => {
 	if (host.isErr()) {
 		throw new Error('Expected a valid plugin graph');
 	}
+
 	return host.value;
 };
 
@@ -31,6 +32,7 @@ const rejectsWithErrors = async (
 
 test('starts dependencies first and stops in reverse order with the same context', async () => {
 	const calls: string[] = [];
+
 	const plugins = (['base', 'app'] as const).map((id, index) => ({
 		id,
 		dependencies: index ? ['base'] : [],
@@ -39,17 +41,20 @@ test('starts dependencies first and stops in reverse order with the same context
 			assert.equal(context.pluginId, id);
 			return okAsync(undefined);
 		},
+
 		stop(context: Parameters<NonNullable<Plugin['stop']>>[0]) {
 			calls.push(`stop:${id}`);
 			assert.equal(context.pluginId, id);
 			return okAsync(undefined);
 		},
 	}));
+
 	const host = hostFor(plugins);
 	assert.equal(host.isOk(), true);
 	if (host.isErr()) {
 		return;
 	}
+
 	assert.equal((await host.value.start()).isOk(), true);
 	assert.equal((await host.value.stop()).isOk(), true);
 	assert.deepEqual(calls, [
@@ -62,6 +67,7 @@ test('starts dependencies first and stops in reverse order with the same context
 
 test('rolls back a failed start and reports expected stop failures', async () => {
 	const calls: string[] = [];
+
 	const plugins: Plugin[] = [
 		{
 			id: 'first',
@@ -70,6 +76,7 @@ test('rolls back a failed start and reports expected stop failures', async () =>
 				calls.push('start:first');
 				return okAsync(undefined);
 			},
+
 			stop: () => {
 				calls.push('stop:first');
 				return errAsync({ kind: 'stop-error' });
@@ -82,6 +89,7 @@ test('rolls back a failed start and reports expected stop failures', async () =>
 				calls.push('start:second');
 				return okAsync(undefined);
 			},
+
 			stop: () => {
 				calls.push('stop:second');
 				return okAsync(undefined);
@@ -96,16 +104,19 @@ test('rolls back a failed start and reports expected stop failures', async () =>
 			},
 		},
 	];
+
 	const host = hostFor(plugins);
 	assert.equal(host.isOk(), true);
 	if (host.isErr()) {
 		return;
 	}
+
 	const result = await host.value.start();
 	assert.equal(result.isErr(), true);
 	if (result.isOk()) {
 		return;
 	}
+
 	assert.deepEqual(result.error, {
 		kind: 'start_failed',
 		primary: {
@@ -135,6 +146,7 @@ test('aggregates cleanup throws before an expected start failure', async () => {
 	const firstError = new Error('first cleanup failed');
 	const secondError = new Error('second cleanup failed');
 	const failure = { kind: 'start-error' };
+
 	const host = validHostFor([
 		{
 			id: 'broken',
@@ -144,10 +156,12 @@ test('aggregates cleanup throws before an expected start failure', async () => {
 					calls.push('first');
 					throw firstError;
 				});
+
 				context.defer(() => {
 					calls.push('second');
 					throw secondError;
 				});
+
 				return errAsync(failure);
 			},
 		},
@@ -167,6 +181,7 @@ test('aggregates cleanup throws before an expected start failure', async () => {
 test('aggregates a start throw before an expected rollback failure', async () => {
 	const startError = new Error('start failed');
 	const failure = { kind: 'stop-error' };
+
 	const host = validHostFor([
 		{
 			id: 'started',
@@ -205,6 +220,7 @@ test('returns expected shutdown failures in reverse start order', async () => {
 	if (result.isOk()) {
 		return;
 	}
+
 	assert.deepEqual(result.error, {
 		kind: 'stop_failed',
 		failures: ['second', 'first'].map((id) => ({
@@ -220,6 +236,7 @@ test('finishes mixed shutdown cleanup before aggregating failures', async () => 
 	const cleanupError = new Error('cleanup failed');
 	const stopError = new Error('stop rejected');
 	const failure = { kind: 'expected-stop-error' };
+
 	const host = validHostFor([
 		{
 			id: 'first',
@@ -228,8 +245,10 @@ test('finishes mixed shutdown cleanup before aggregating failures', async () => 
 				context.defer(() => {
 					calls.push('cleanup:first');
 				});
+
 				return okAsync(undefined);
 			},
+
 			stop: () => {
 				calls.push('stop:first');
 				return ResultAsync.fromSafePromise(Promise.reject(stopError));
@@ -243,8 +262,10 @@ test('finishes mixed shutdown cleanup before aggregating failures', async () => 
 					calls.push('cleanup:second');
 					throw cleanupError;
 				});
+
 				return okAsync(undefined);
 			},
+
 			stop: () => {
 				calls.push('stop:second');
 				return errAsync(failure);
