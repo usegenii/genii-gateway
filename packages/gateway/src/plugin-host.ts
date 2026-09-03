@@ -1,26 +1,15 @@
 import { err, ok, type Result, ResultAsync } from 'neverthrow';
 import type { GatewayEventBus } from './event-bus.ts';
-import type { PluginContext } from './plugin-context.ts';
+import type { Plugin, PluginId, PluginLifecycleFailure } from './index.ts';
 import {
 	createPluginContext,
 	type OwnedPluginContext,
 } from './plugin-context.ts';
 import {
 	type PluginDependencyFailure,
-	type PluginDescriptor,
-	type PluginId,
 	resolvePluginOrder,
 } from './plugin-dependencies.ts';
 import type { GatewayServiceRegistry } from './plugin-services.ts';
-
-export interface PluginLifecycleFailure {
-	readonly kind: string;
-}
-
-export interface Plugin extends PluginDescriptor {
-	start(context: PluginContext): ResultAsync<void, PluginLifecycleFailure>;
-	stop?(context: PluginContext): ResultAsync<void, PluginLifecycleFailure>;
-}
 
 export interface PluginOperationFailure {
 	readonly pluginId: PluginId;

@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import type { PluginId } from '../src/index.ts';
 import {
 	type PluginDependencyFailure,
 	type PluginDescriptor,
-	type PluginId,
 	resolvePluginOrder,
 } from '../src/plugin-dependencies.ts';
 

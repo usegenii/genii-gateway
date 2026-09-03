@@ -2,14 +2,14 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { createEventBus, type GatewayEventBus } from '../src/event-bus.ts';
+import { serviceToken } from '../src/index.ts';
 import { createPluginContext } from '../src/plugin-context.ts';
 import {
 	createServiceRegistry,
 	type GatewayServiceRegistry,
-	serviceToken,
 } from '../src/plugin-services.ts';
 
-declare module '../src/event-bus.ts' {
+declare module '../src/index.ts' {
 	interface GatewayEventMap {
 		'genii:context-test': { readonly value: string };
 	}

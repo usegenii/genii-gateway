@@ -1,6 +1,5 @@
 import { err, ok, type Result } from 'neverthrow';
-
-export type PluginId = string;
+import type { PluginId } from './index.ts';
 
 export interface PluginDescriptor {
 	readonly id: PluginId;

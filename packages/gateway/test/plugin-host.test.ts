@@ -3,7 +3,8 @@ import test from 'node:test';
 import { errAsync, okAsync, ResultAsync } from 'neverthrow';
 
 import { createEventBus } from '../src/event-bus.ts';
-import { createPluginHost, type Plugin } from '../src/plugin-host.ts';
+import type { Plugin } from '../src/index.ts';
+import { createPluginHost } from '../src/plugin-host.ts';
 import { createServiceRegistry } from '../src/plugin-services.ts';
 
 const hostFor = (plugins: readonly Plugin[]) =>

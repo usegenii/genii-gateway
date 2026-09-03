@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { createEventBus, type GatewayEventMap } from '../src/event-bus.ts';
+import { createEventBus } from '../src/event-bus.ts';
+import type { GatewayEventMap } from '../src/index.ts';
 
-declare module '../src/event-bus.ts' {
+declare module '../src/index.ts' {
 	interface GatewayEventMap {
 		'genii:message': { readonly text: string };
 		'plugin:@usegenii/example:ready': { readonly attempt: number };

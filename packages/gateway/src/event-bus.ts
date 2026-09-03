@@ -1,10 +1,10 @@
 import { createHooks } from 'hookable';
-
-export type PluginId = string;
-export type EventHandler<Payload> = (payload: Payload) => void | Promise<void>;
-
-// biome-ignore lint/suspicious/noEmptyInterface: Event packages extend this map through declaration merging.
-export interface GatewayEventMap {}
+import type {
+	EventHandler,
+	GatewayEventMap,
+	PluginEvents,
+	PluginId,
+} from './index.ts';
 
 type EventName = keyof GatewayEventMap & string;
 type GatewayHooks = {
@@ -20,17 +20,6 @@ interface TypedHooks {
 		name: Name,
 		payload: GatewayEventMap[Name],
 	): Promise<unknown> | undefined;
-}
-
-export interface PluginEvents {
-	on<Name extends EventName>(
-		name: Name,
-		handler: EventHandler<GatewayEventMap[Name]>,
-	): () => void;
-	emit<Name extends EventName>(
-		name: Name,
-		payload: GatewayEventMap[Name],
-	): Promise<void>;
 }
 
 export interface GatewayEventBus {
