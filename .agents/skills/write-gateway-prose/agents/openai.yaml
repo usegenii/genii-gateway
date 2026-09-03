@@ -1,0 +1,4 @@
+interface:
+  display_name: "Write Gateway prose"
+  short_description: "Apply Genii Gateway prose conventions"
+  default_prompt: "Use $write-gateway-prose to draft this text with the repository conventions."
